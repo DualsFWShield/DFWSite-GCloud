@@ -1,0 +1,11 @@
+
+.git
+.gitignore
+.dockerignore
+Dockerfile
+README.md
+task.md
+implementation_plan.md
+walkthrough.md
+node_modules
+.DS_Store

@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DUALS | SYSTEM ROOT</title>
+    
+    <!-- Polices Brutalistes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Three.js (For Dimensional Rifts) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Config Néo-Brutaliste -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'concrete': '#f0f0f0',
+                        'acid-yellow': '#ccff00',
+                        'electric-blue': '#0022ff',
+                        'neon-pink': '#ff0099',
+                        'off-black': '#050505',
+                        'terminal-green': '#20C20E',
+                    },
+                    fontFamily: {
+                        'display': ['"Archivo Black"', 'sans-serif'],
+                        'mono': ['"Space Mono"', 'monospace'],
+                    },
+                    boxShadow: {
+                        'hard': '8px 8px 0px 0px #000',
+                        'hard-sm': '4px 4px 0px 0px #000',
+                        'hard-hover': '0px 0px 0px 0px #000',
+                    }
+                }
+            }
+        }
+    </script>
+    
+
+    <style>
+        body {
+            background-color: #f0f0f0;
+            color: #050505;
+            cursor: none;
+            overflow-x: hidden;
+        }
+
+        /* Devicon Outlined Style */
+        .devicon-outlined {
+            color: transparent;
+            -webkit-text-stroke: 2px black;
+        }
+
+        ::selection {
+            background-color: #050505;
+            color: #20C20E;
+        }
+
+        /* Custom Cursor */
+        .cursor-dot, .cursor-outline {
+            position: fixed;
+            top: 0; left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        .cursor-dot { width: 8px; height: 8px; background-color: black; }
+        .cursor-outline {
+            width: 40px; height: 40px;
+            border: 2px solid black;
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+        body.hovering .cursor-outline {
+            width: 80px; height: 80px;
+            background-color: #ccff00;
+            mix-blend-mode: difference;
+            border-color: transparent;
+        }
+
+        /* Utility */
+        .text-stroke { -webkit-text-stroke: 2px black; color: transparent; }
+        
+        /* Terminal Scrollbar */
+        .terminal-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+        .terminal-scroll::-webkit-scrollbar-track { background: #000; }
+        .terminal-scroll::-webkit-scrollbar-thumb { background: #20C20E; border: 1px solid #000; }
+        .terminal-scroll::-webkit-scrollbar-corner { background: #000; }
+        
+        /* Aspect Ratio for Youtube */
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background: #000; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+
+        /* Boot Overlay */
+        #boot-overlay {
+            position: fixed; inset: 0; background: #000; z-index: 10000;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            padding: 2rem; font-family: 'Space Mono', monospace;
+            color: #20C20E; pointer-events: auto;
+        }
+        .boot-text { font-size: 14px; line-height: 1.5; }
+        
+        /* Glitch Effect */
+        .glitch-wrapper { position: relative; overflow: hidden; }
+        .glitch-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: inherit; background-size: cover; pointer-events: none; opacity: 0; mix-blend-mode: exclusion;
+        }
+        
+        /* Utility */
+        .skew-content { transform-style: preserve-3d; will-change: transform; }
+
+        /* God Mode */
+        .god-mode {
+            filter: invert(1) hue-rotate(180deg) contrast(1.2);
+        }
+        .god-mode .cursor-outline {
+            border-color: #ff00ff;
+            box-shadow: 0 0 20px #ff00ff;
+        }
+
+        /* CRT Overlay */
+        .crt-scanlines {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none; z-index: 9998;
+            opacity: 0.4;
+        }
+
+        /* Gravity Box */
+        #gravity-box {
+            position: fixed; top: 0; left: 0; width: 80px; height: 80px; background: #000;
+            border: 2px solid #fff; color: #fff; z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; text-align: center; cursor: grab;
+            user-select: none; touch-action: none;
+            box-shadow: 4px 4px 0 #ccff00;
+        }
+        #gravity-box:active { cursor: grabbing; box-shadow: 2px 2px 0 #ccff00; }
+        
+        /* True RGB/CMY Split */
+        .cmy-wrapper { position: relative; display: inline-block; mix-blend-mode: normal; }
+        .cmy-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; mix-blend-mode: multiply;
+            transition: transform 0.1s cubic-bezier(0.2, 0, 0.4, 1);
+        }
+        .cmy-layer.cyan { color: #00FFFF; transform: translate(calc(var(--rx, 0) * -1.5px), calc(var(--ry, 0) * -1.5px)); }
+        .cmy-layer.magenta { color: #FF00FF; transform: translate(calc(var(--rx, 0) * 0px), calc(var(--ry, 0) * 1.5px)); }
+        .cmy-layer.yellow { color: #FFFF00; transform: translate(calc(var(--rx, 0) * 1.5px), calc(var(--ry, 0) * -1.5px)); }
+        .cmy-base { color: transparent; position: relative; z-index: 10; } /* Invisible text for accessibility/layout */
+        
+        /* MOBILE ADAPTATIONS */
+        @media (pointer: coarse), (hover: none) {
+            /* Hide custom cursor on touch devices */
+            /* Hide custom cursor on touch devices */
+            .cursor-dot, .cursor-outline { display: none !important; }
+            body { cursor: auto !important; }
+            
+            /* Reduce CRT effect for performance */
+            .crt-scanlines { opacity: 0.15; }
+            
+            /* CMY title: REMOVED AUTO-ANIMATION FOR GYRO PARALLAX */
+            /*.cmy-wrapper { animation: cmy-pulse 4s ease-in-out infinite; }*/
+        }
+
+        /* DATA DISK UI */
+        #gravity-box {
+            flex-direction: column; 
+            gap: 4px;
+        }
+        #disk-toggle {
+            width: 16px; height: 16px;
+            border: 1px solid #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.3s;
+        }
+        #disk-toggle.active { background: #20C20E; box-shadow: 0 0 5px #20C20E; border-color: #20C20E; }
+        
+        #disk-hint {
+            position: absolute;
+            bottom: 110%; left: 50%; 
+            transform: translateX(-50%);
+            background: #000; color: #ccff00; 
+            border: 2px solid #fff;
+            padding: 8px 12px; 
+            font-family: 'Space Mono', monospace;
+            font-size: 10px; 
+            pointer-events: none; 
+            opacity: 0;
+            z-index: 10000;
+            white-space: nowrap;
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.5);
+        }
+        /* Arrow for the hint */
+        #disk-hint::after {
+            content: '';
+            position: absolute;
+            top: 100%; left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #fff transparent transparent transparent;
+        }
+
+        /* SYSTEM HINTS */
+        .system-hint-msg {
+            background: rgba(0,0,0,0.9);
+            color: #20C20E;
+            border-left: 4px solid #ccff00;
+            padding: 8px;
+            transform: translateX(-120%);
+            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.5);
+        }
+        .system-hint-msg.sarcastic {
+            color: #ff0099;
+            border-color: #ff0099;
+        }
+        .system-hint-msg.visible {
+            transform: translateX(0);
+        }
+        
+    </style>
+</head>
+<body class="font-mono antialiased overflow-hidden">
+    <!-- 3D WORLD -->
+    <canvas id="world-canvas"></canvas>
+    
+    <!-- MATRIX RAIN CANVAS (Hidden by default) -->
+    <canvas id="matrix-canvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-[9900] opacity-0 transition-opacity duration-1000"></canvas>
+
+    <!-- GRAVITY BOX -->
+    <div id="gravity-box">
+        <span class="pointer-events-none">DATA_DISK<br>v1.0</span>
+        <!-- Toggle Button for Mobile Sensors -->
+        <div id="disk-toggle" title="Toggle Sensors"></div>
+        <!-- Hint attached to box -->
+        <div id="disk-hint">OPEN THE WEBSITE IN A SECOND WINDOW AND THROW ME IN IT</div>
+    </div>
+
+    <!-- SYSTEM HINTS CONTAINER -->
+    <div id="system-hints" class="fixed bottom-4 left-4 flex flex-col gap-2 z-50 pointer-events-none font-mono text-xs max-w-[300px]"></div>
+
+    <!-- 
+    
+    ██████╗ ██╗   ██╗ █████╗ ██╗     ███████╗    ███████╗██╗    ██╗    ███████╗██╗  ██╗██╗███████╗██╗     ██████╗ 
+    ██╔══██╗██║   ██║██╔══██╗██║     ██╔════╝    ██╔════╝██║    ██║    ██╔════╝██║  ██║██║██╔════╝██║     ██╔══██╗
+    ██║  ██║██║   ██║███████║██║     ███████╗    █████╗  ██║ █╗ ██║    ███████╗███████║██║█████╗  ██║     ██║  ██║
+    ██║  ██║██║   ██║██╔══██║██║     ╚════██║    ██╔══╝  ██║███╗██║    ╚════██║██╔══██║██║██╔══╝  ██║     ██║  ██║
+    ██████╔╝╚██████╔╝██║  ██║███████╗███████║    ██║     ╚███╔███╔╝    ███████║██║  ██║██║███████╗███████╗██████╔╝
+    ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝    ╚═╝      ╚══╝╚══╝     ╚══════╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚═════╝ 
+    
+    > SYSTEM_ROOT_ACCESS_GRANTED
+    > WELCOME_TO_THE_SOURCE
+    
+    -->
+
+    <!-- GLOBAL GRID OVERLAY -->
+    <div class="fixed inset-0 opacity-10 pointer-events-none z-0" style="background-image: linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px); background-size: 40px 40px;"></div>
+
+    <!-- CRT EFFECT -->
+    <div class="crt-scanlines"></div>
+
+    <!-- BOOT OVERLAY -->
+    <div id="boot-overlay">
+        <div id="boot-log" class="flex flex-col gap-1 mb-8 max-w-2xl">
+            <!-- Log items injected via JS -->
+        </div>
+        <div class="w-full max-w-md bg-gray-900 h-1 mb-2">
+            <div id="boot-progress" class="bg-terminal-green h-full w-0"></div>
+        </div>
+        <div class="flex justify-between items-end w-full max-w-md">
+            <p class="animate-pulse text-xs">SYSTEM_INITIALIZATION_SEQUENCE...</p>
+            <p class="text-xs">v2.5.0-RC1</p>
+        </div>
+        
+    </div>
+
+    <!-- CURSOR -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <!-- NAV -->
+    <nav class="fixed top-0 left-0 w-full p-6 flex justify-between items-center z-50 mix-blend-difference text-white pointer-events-none">
+        <a href="#" id="nav-logo" class="text-2xl font-display pointer-events-auto hover-trigger">DualsFWShield</a>
+        <div class="hidden md:flex gap-6 text-sm md:text-base pointer-events-auto font-bold">
+            <a href="#projects" class="hover:text-acid-yellow hover-trigger">[DEV]</a>
+            <a href="#videos" class="hover:text-acid-yellow hover-trigger">[MOTION]</a>
+            <a href="#logos" class="hover:text-acid-yellow hover-trigger">[DESIGN]</a>
+            <a href="#terminal" class="hover:text-acid-yellow hover-trigger">[TERM]</a>
+            <a href="#contact" class="hover:text-acid-yellow hover-trigger">[CONTACT]</a>
+        </div>
+    </nav>
+
+    <main class="relative w-full">
+
+        <!-- HERO SECTION -->
+        <section class="h-auto flex flex-col justify-end px-4 pb-12 border-b-4 border-black bg-concrete relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px); background-size: 40px 40px;"></div>
+            
+            <div class="relative z-10">
+                <div class="flex items-center gap-4 mb-4 ml-2 reveal-text">
+                    <span class="w-3 h-3 bg-red-600 rounded-full animate-pulse"></span>
+                    <p class="text-lg font-bold font-mono">ETHICAL HACKER // FULL STACK (AI ASSISTED)</p>
+                </div>
+                <!-- TRUE CMY SPLIT APPLIED HERE -->
+                <div id="hero-title-container" class="cmy-wrapper font-display text-[15vw] leading-[0.8] tracking-tighter uppercase break-all reveal-text cursor-crosshair">
+                   <h1 class="cmy-base">
+                       DUALSFW<br><span class="text-stroke">SHIELD</span>
+                   </h1>
+                   <div class="cmy-layer cyan" aria-hidden="true">
+                       DUALSFW<br><span>SHIELD</span>
+                   </div>
+                   <div class="cmy-layer magenta" aria-hidden="true">
+                       DUALSFW<br><span>SHIELD</span>
+                   </div>
+                   <div class="cmy-layer yellow" aria-hidden="true">
+                       DUALSFW<br><span>SHIELD</span>
+                   </div>
+                </div>
+                
+                <div class="mt-12 flex flex-col md:flex-row justify-between items-end border-t-4 border-black pt-6 reveal-text">
+                    <div class="flex flex-col gap-4">
+                        <p class="max-w-md text-sm md:text-base font-bold">
+                            > Exploration de l'IA et de la Cybersécurité.<br>
+                            > Je code mieux avec de la Phonk.<br>
+                            > HTML, JavaScript, PHP, Bash.
+                        </p>
+                        <div class="flex gap-4">
+                            <!-- LINKEDIN -->
+                            <a href="https://linkedin.com/in/noah-bruijninckx-930a80221" target="_blank" class="w-10 h-10 border-2 border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors" title="LinkedIn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+                            </a>
+                            <!-- X (TWITTER) -->
+                            <a href="https://x.com/Rapt_re" target="_blank" class="w-10 h-10 border-2 border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors" title="X (Twitter)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l11.733 16h4.267l-11.733 -16z"/><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"/></svg>
+                            </a>
+                            <!-- YOUTUBE (BRN'S) -->
+                            <a href="https://www.youtube.com/@Brn-s" target="_blank" class="w-10 h-10 border-2 border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors" title="YouTube (Brn's)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/></svg>
+                            </a>
+                        </div>
+                    </div>
+                    <a href="https://github.com/DualsFWShield" target="_blank" class="group bg-off-black text-white px-8 py-4 font-bold border-2 border-black shadow-hard hover:shadow-hard-hover hover:translate-x-2 hover:translate-y-2 transition-all duration-200 hover-trigger flex items-center gap-2">
+                        <span class="text-terminal-green">></span> GITHUB_PROFILE
+                    </a>
+                </div>
+            </div>
+            <div class="absolute right-[-5%] bottom-[10%] w-[30vw] h-[30vw] border-[20px] border-black rounded-full mix-blend-overlay opacity-20 hero-parallax"></div>
+        </section>
+
+        <!-- TECH STACK MARQUEE -->
+        <div class="w-full py-6 bg-acid-yellow border-b-4 border-black overflow-hidden flex whitespace-nowrap rotate-1">
+            <div class="marquee-content flex gap-12 font-display text-5xl md:text-7xl text-black items-center">
+                <div class="flex items-center gap-4"> <span>PYTHON</span></div> <span>//</span>
+                <div class="flex items-center gap-4"> <span class="text-stroke">JAVASCRIPT</span></div> <span>//</span>
+                <div class="flex items-center gap-4"> <span>TENSORFLOW</span></div> <span>//</span>
+                <div class="flex items-center gap-4"><span class="text-stroke">VUE.JS</span></div> <span>//</span>
+                <div class="flex items-center gap-4"><span>ETHICAL HACKING</span></div> <span>//</span>
+                <div class="flex items-center gap-4"><span class="text-stroke">BASH</span></div> <span>//</span>
+                <div class="flex items-center gap-4"><span>PHP</span></div> <span>//</span>
+                <div class="flex items-center gap-4"><span class="text-stroke">PYTORCH</span></div> <span>//</span>
+            </div>
+        </div>
+
+        <!-- SECTION 1: DEV PROJECTS -->
+        <section id="projects" class="p-4 md:p-12 bg-concrete relative border-b-4 border-black">
+            <div class="flex justify-between items-end mb-12">
+                <h2 class="font-display text-6xl md:text-8xl uppercase">Featured_<br>Builds</h2>
+                <span class="hidden md:block font-mono text-xl border-2 border-black px-2 bg-white">DIR: /HOME/CODE</span>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Project 1: CHESS -->
+                <article class="group bg-white border-4 border-black p-6 shadow-hard hover:shadow-hard-hover hover:translate-x-2 hover:translate-y-2 transition-all duration-200 flex flex-col justify-between min-h-[450px] hover-trigger relative overflow-hidden">
+                    <div class="absolute top-2 right-2 z-20">
+                        <div class="w-4 h-4 bg-terminal-green rounded-full border-2 border-black animate-pulse"></div>
+                    </div>
+                    <div>
+                        <h3 class="font-display text-4xl mb-2 group-hover:text-electric-blue transition-colors">DFWS_CHESS</h3>
+                        <p class="text-sm font-bold border-b-2 border-black pb-4 mb-4">> Moteur d'échecs & Téléchargement.</p>
+                        <div class="w-full h-48 bg-off-black border-2 border-black overflow-hidden mb-4 relative">
+                            <img src="https://images.unsplash.com/photo-1529699211952-734e80c4d42b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" class="object-cover w-full h-full grayscale group-hover:grayscale-0 transition-all duration-500 transform group-hover:scale-110" alt="Chess">
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-black text-white px-2 py-1 text-xs font-bold">GAME DEV</span>
+                            <span class="border-2 border-black px-2 py-1 text-xs font-bold">LOGIC</span>
+                        </div>
+                        <a href="projects/dfws-chess/index.html" target="_blank" class="mt-2 text-center bg-acid-yellow border-2 border-black py-2 font-bold hover:bg-black hover:text-white transition-colors">LAUNCH GAME</a>
+                    </div>
+                </article>
+
+                <!-- Project 2: SPOTIFY (Large) -->
+                <article class="group md:col-span-2 bg-off-black text-white border-4 border-black p-6 shadow-hard hover:shadow-hard-hover hover:translate-x-2 hover:translate-y-2 transition-all duration-200 min-h-[450px] hover-trigger relative overflow-hidden">
+                    <div class="absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity">
+                         <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" class="object-cover w-full h-full mix-blend-luminosity" alt="Music">
+                    </div>
+                    <div class="relative z-10 flex flex-col h-full justify-between">
+                        <div class="flex justify-between w-full border-b border-white/30 pb-4">
+                            <h3 class="font-display text-4xl md:text-6xl text-terminal-green">SPOTIFY_WRAPPED</h3>
+                            <span class="border border-terminal-green text-terminal-green px-2 py-1 h-fit text-sm">DATA_ANALYSIS</span>
+                        </div>
+                        <div class="mt-8">
+                            <p class="text-xl max-w-lg font-mono">> Analyse d'historique d'écoute & Statistiques.</p>
+                            <div class="flex gap-4 mt-6">
+                                <a href="projects/spotify-listen-history/index.html" target="_blank" class="bg-white text-black px-6 py-3 font-bold border-2 border-transparent hover:bg-acid-yellow hover:border-white transition-colors">
+                                    VIEW ANALYTICS
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Project 3: ASCII CONVERTER -->
+                <article class="group bg-white border-4 border-black p-6 shadow-hard hover:shadow-hard-hover hover:translate-x-2 hover:translate-y-2 transition-all duration-200 flex flex-col justify-between min-h-[400px] hover-trigger">
+                    <div>
+                        <h3 class="font-display text-4xl mb-2 group-hover:text-neon-pink transition-colors break-words">IMG_TO_ASCII</h3>
+                        <p class="text-sm font-bold border-b-2 border-black pb-4 mb-4">> Conversion Vidéo/Image vers Formes & ASCII.</p>
+                        <div class="w-full h-48 bg-gray-200 border-2 border-black overflow-hidden mb-4">
+                            <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" class="object-cover w-full h-full grayscale group-hover:grayscale-0 transition-all duration-500 transform group-hover:scale-110" alt="Cyber">
+                        </div>
+                    </div>
+                    <a href="projects/dotvid/index.html" target="_blank" class="w-full text-center border-2 border-black py-2 font-bold hover:bg-black hover:text-white transition-colors">EXECUTE TOOL</a>
+                </article>
+            </div>
+        </section>
+
+        <!-- SECTION 2: MOTION LAB (VIDEOS) -->
+        <section id="videos" class="p-4 md:p-12 bg-off-black text-concrete relative border-b-4 border-black">
+             <div class="flex justify-between items-end mb-12">
+                <h2 class="font-display text-5xl md:text-8xl uppercase text-white"><span class="text-acid-yellow">Motion_</span><br>Lab</h2>
+                <a href="https://youtube.com/playlist?list=PLMpsep7swVlgVhp52905HZFK2yD0xAacf&si=CjD84Ue-CUsH5F--" target="_blank" class="hidden md:flex items-center gap-2 font-mono text-xl border-2 border-white px-4 py-2 hover:bg-white hover:text-black transition-colors">
+                    <span>PLAYLIST_FULL</span> ↗
+                </a>
+            </div>
+
+            <!-- Video Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- NOTE: Remplace VIDEO_ID par l'ID Youtube réel (ex: pour youtube.com/watch?v=dQw4w9WgXcQ, l'ID est dQw4w9WgXcQ) -->
+                
+                <!-- 0. Playlist Highlight -->
+                <div class="col-span-1 md:col-span-2 lg:col-span-3 border-4 border-white bg-black p-2 shadow-hard hover:shadow-hard-hover transition-all">
+                     <div class="flex justify-between text-xs font-bold mb-2 font-mono text-acid-yellow">
+                        <span>/// FEATURED_PLAYLIST</span>
+                        <span>[REC] ●</span>
+                    </div>
+                    <div class="video-container border-2 border-white/20">
+                        <iframe src="https://www.youtube.com/embed/videoseries?list=PLMpsep7swVlgVhp52905HZFK2yD0xAacf" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                </div>
+
+                <!-- 1. Présentation Brn's -->
+                <div class="border-2 border-white/50 bg-black p-2 hover:border-acid-yellow transition-colors group">
+                    <p class="font-mono text-sm mb-2 text-white group-hover:text-acid-yellow">01_PRÉSENTATION_BRNS</p>
+                    <div class="video-container grayscale group-hover:grayscale-0 transition-all">
+                        <iframe src="https://www.youtube.com/embed/ftdtwRB0RLo" title="YouTube video" allowfullscreen></iframe>
+                    </div>
+                </div>
+
+                <!-- 2. Pc&T -->
+                <div class="border-2 border-white/50 bg-black p-2 hover:border-acid-yellow transition-colors group">
+                    <p class="font-mono text-sm mb-2 text-white group-hover:text-acid-yellow">02_PC&T</p>
+                    <div class="video-container grayscale group-hover:grayscale-0 transition-all">
+                        <iframe src="https://www.youtube.com/embed/O-9Ubj-ngzU" title="YouTube video" allowfullscreen></iframe>
+                    </div>
+                </div>
+
+                <!-- 3. Nespresso -->
+                <div class="border-2 border-white/50 bg-black p-2 hover:border-acid-yellow transition-colors group">
+                    <p class="font-mono text-sm mb-2 text-white group-hover:text-acid-yellow">03_NESPRESSO_EDIT</p>
+                    <div class="video-container grayscale group-hover:grayscale-0 transition-all">
+                         <iframe src="https://www.youtube.com/embed/h3zEhn8GZqU" title="YouTube video" allowfullscreen></iframe>
+                    </div>
+                </div>
+
+                <!-- 4. Huawei P20 Lite -->
+                <div class="border-2 border-white/50 bg-black p-2 hover:border-acid-yellow transition-colors group">
+                    <p class="font-mono text-sm mb-2 text-white group-hover:text-acid-yellow">04_HUAWEI_P20</p>
+                    <div class="video-container grayscale group-hover:grayscale-0 transition-all">
+                        <iframe src="https://www.youtube.com/embed/OI9hJdBIcGI" title="YouTube video" allowfullscreen></iframe>
+                    </div>
+                </div>
+
+                <!-- 5. Nalu -->
+                <div class="border-2 border-white/50 bg-black p-2 hover:border-acid-yellow transition-colors group">
+                    <p class="font-mono text-sm mb-2 text-white group-hover:text-acid-yellow">05_NALU_ENERGY</p>
+                    <div class="video-container grayscale group-hover:grayscale-0 transition-all">
+                        <iframe src="https://www.youtube.com/embed/gUGWVeQa2aE" title="YouTube video" allowfullscreen></iframe>
+                    </div>
+                </div>
+
+                <!-- 6. Huawei Watch GT -->
+                <div class="border-2 border-white/50 bg-black p-2 hover:border-acid-yellow transition-colors group">
+                    <p class="font-mono text-sm mb-2 text-white group-hover:text-acid-yellow">06_HUAWEI_WATCH_GT</p>
+                    <div class="video-container grayscale group-hover:grayscale-0 transition-all">
+                        <iframe src="https://www.youtube.com/embed/YjtRg_GhOA0" title="YouTube video" allowfullscreen></iframe>
+                    </div>
+                </div>
+
+                 <!-- 7. ZBL -->
+                 <div class="border-2 border-white/50 bg-black p-2 hover:border-acid-yellow transition-colors group">
+                    <p class="font-mono text-sm mb-2 text-white group-hover:text-acid-yellow">07_ZBL</p>
+                    <div class="video-container grayscale group-hover:grayscale-0 transition-all">
+                        <iframe src="https://www.youtube.com/embed/bt-qyCHlUag" title="YouTube video" allowfullscreen></iframe>
+                    </div>
+                </div>
+
+                 <!-- 8. Girls League -->
+                 <div class="border-2 border-white/50 bg-black p-2 hover:border-acid-yellow transition-colors group">
+                    <p class="font-mono text-sm mb-2 text-white group-hover:text-acid-yellow">08_GIRLS_LEAGUE</p>
+                    <div class="video-container grayscale group-hover:grayscale-0 transition-all">
+                        <iframe src="https://www.youtube.com/embed/NThv4X0bOEY" title="YouTube video" allowfullscreen></iframe>
+                    </div>
+                </div>
+
+                 <!-- 9. Street Family -->
+                 <div class="border-2 border-white/50 bg-black p-2 hover:border-acid-yellow transition-colors group">
+                    <p class="font-mono text-sm mb-2 text-white group-hover:text-acid-yellow">09_STREET_FAMILY</p>
+                    <div class="video-container grayscale group-hover:grayscale-0 transition-all">
+                        <iframe src="https://www.youtube.com/embed/KAcMzbUQzK0" title="YouTube video" allowfullscreen></iframe>
+                    </div>
+                </div>
+                
+                <!-- 10. Sound Design -->
+                 <div class="border-2 border-white/50 bg-black p-2 hover:border-acid-yellow transition-colors group">
+                    <p class="font-mono text-sm mb-2 text-white group-hover:text-acid-yellow">10_SOUND_DESIGN</p>
+                    <div class="video-container grayscale group-hover:grayscale-0 transition-all">
+                        <iframe src="https://www.youtube.com/embed/_IpacR7_z3Y" title="YouTube video" allowfullscreen></iframe>
+                    </div>
+                </div>
+                
+                <!-- 11. Chocapic -->
+                 <div class="border-2 border-white/50 bg-black p-2 hover:border-acid-yellow transition-colors group">
+                    <p class="font-mono text-sm mb-2 text-white group-hover:text-acid-yellow">11_PUB_CHOCAPIC</p>
+                    <div class="video-container grayscale group-hover:grayscale-0 transition-all">
+                        <iframe src="https://www.youtube.com/embed/6UdxVFILy-g" title="YouTube video" allowfullscreen></iframe>
+                    </div>
+                </div>
+
+                <!-- 12. Jewellery -->
+                 <div class="border-2 border-white/50 bg-black p-2 hover:border-acid-yellow transition-colors group">
+                    <p class="font-mono text-sm mb-2 text-white group-hover:text-acid-yellow">12_JEWELLERY_KISS</p>
+                    <div class="video-container grayscale group-hover:grayscale-0 transition-all">
+                        <iframe src="https://www.youtube.com/embed/cONBspJ8zRo" title="YouTube video" allowfullscreen></iframe>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: IDENTITY GRID (LOGOS) -->
+        <section id="logos" class="py-24 px-4 md:px-12 bg-concrete border-b-4 border-black">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-4">
+                <h2 class="font-display text-5xl md:text-8xl uppercase leading-none">Identity_<br>Grid</h2>
+                <div class="text-right">
+                    <p class="font-bold text-xl">VECTOR_VAULT [8]</p>
+                    <p class="font-mono text-sm text-gray-600">CLIENT_WORK // PERSONAL</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- LOGO 1 -->
+                <div class="logo-card aspect-square bg-white border-4 border-black p-8 flex items-center justify-center hover:bg-black hover:invert transition-all duration-300 group hover-trigger cursor-none relative">
+                    <span class="absolute top-2 left-2 text-xs font-mono opacity-50">#01</span>
+                    <img src="media/logo (0).jpg" alt="Logo 1" class="w-full h-full object-contain mix-blend-multiply group-hover:mix-blend-normal">
+                </div>
+
+                <!-- LOGO 2 -->
+                <div class="logo-card aspect-square bg-white border-4 border-black p-8 flex items-center justify-center hover:bg-black hover:invert transition-all duration-300 group hover-trigger cursor-none relative">
+                    <span class="absolute top-2 left-2 text-xs font-mono opacity-50">#02</span>
+                    <img src="media/logo (1).png" alt="Logo 2" class="w-full h-full object-contain mix-blend-multiply group-hover:mix-blend-normal">
+                </div>
+
+                <!-- LOGO 3 -->
+                <div class="logo-card aspect-square bg-white border-4 border-black p-8 flex items-center justify-center hover:bg-black hover:invert transition-all duration-300 group hover-trigger cursor-none relative">
+                    <span class="absolute top-2 left-2 text-xs font-mono opacity-50">#03</span>
+                    <img src="media/logo (2).png" alt="Logo 3" class="w-full h-full object-contain mix-blend-multiply group-hover:mix-blend-normal">
+                </div>
+
+                <!-- LOGO 4 -->
+                <div class="logo-card aspect-square bg-white border-4 border-black p-8 flex items-center justify-center hover:bg-black hover:invert transition-all duration-300 group hover-trigger cursor-none relative">
+                    <span class="absolute top-2 left-2 text-xs font-mono opacity-50">#04</span>
+                    <img src="media/logo (3).png" alt="Logo 4" class="w-full h-full object-contain mix-blend-multiply group-hover:mix-blend-normal">
+                </div>
+
+                 <!-- LOGO 5 -->
+                 <div class="logo-card aspect-square bg-white border-4 border-black p-8 flex items-center justify-center hover:bg-black hover:invert transition-all duration-300 group hover-trigger cursor-none relative">
+                    <span class="absolute top-2 left-2 text-xs font-mono opacity-50">#05</span>
+                    <img src="media/logo (4).png" alt="Logo 5" class="w-full h-full object-contain mix-blend-multiply group-hover:mix-blend-normal">
+                </div>
+
+                <!-- LOGO 6 -->
+                <div class="logo-card aspect-square bg-white border-4 border-black p-8 flex items-center justify-center hover:bg-black hover:invert transition-all duration-300 group hover-trigger cursor-none relative">
+                    <span class="absolute top-2 left-2 text-xs font-mono opacity-50">#06</span>
+                    <img src="media/logo (5).png" alt="Logo 6" class="w-full h-full object-contain mix-blend-multiply group-hover:mix-blend-normal">
+                </div>
+
+                <!-- LOGO 7 -->
+                <div class="logo-card aspect-square bg-white border-4 border-black p-8 flex items-center justify-center hover:bg-black hover:invert transition-all duration-300 group hover-trigger cursor-none relative">
+                    <span class="absolute top-2 left-2 text-xs font-mono opacity-50">#07</span>
+                    <img src="media/logo (6).png" alt="Logo 7" class="w-full h-full object-contain mix-blend-multiply group-hover:mix-blend-normal">
+                </div>
+
+                <!-- LOGO 8 -->
+                <div class="logo-card aspect-square bg-white border-4 border-black p-8 flex items-center justify-center hover:bg-black hover:invert transition-all duration-300 group hover-trigger cursor-none relative">
+                    <span class="absolute top-2 left-2 text-xs font-mono opacity-50">#08</span>
+                    <img src="media/Duals 2.0 -pp.png" alt="Logo 8" class="w-full h-full object-contain mix-blend-multiply group-hover:mix-blend-normal">
+                </div>
+            </div>
+        </section>
+
+        <!-- TERMINAL ARCHIVE LIST -->
+        <section id="terminal" class="py-20 px-4 md:px-12 bg-off-black text-terminal-green font-mono border-b-4 border-black">
+            <div class="max-w-7xl mx-auto">
+                <div class="mb-8 border-b border-terminal-green pb-2">
+                    <span class="animate-pulse">root@dualsfw:~#</span> ls -la ./other_projects/
+                </div>
+
+                <div class="overflow-x-auto terminal-scroll">
+                    <table class="w-full text-left border-collapse min-w-[600px]">
+                        <thead>
+                            <tr class="text-white border-b-2 border-white/20 text-lg">
+                                <th class="py-4 pl-4">PERMISSIONS</th>
+                                <th class="py-4">PID</th>
+                                <th class="py-4">PROJECT_NAME</th>
+                                <th class="py-4">DESCRIPTION</th>
+                                <th class="py-4 text-right pr-4">ACTION</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm md:text-base">
+                            <!-- Rows -->
+                            <tr class="hover:bg-terminal-green hover:text-black transition-colors border-b border-white/10 group cursor-pointer hover-trigger" onclick="window.open('projects/botarena/index.html')">
+                                <td class="py-4 pl-4 font-bold">-rwxr-xr-x</td>
+                                <td class="py-4 text-white/50 group-hover:text-black">1092</td>
+                                <td class="py-4 font-bold text-xl">BOT_ARENA</td>
+                                <td class="py-4 opacity-80">Simulation de combat d'IA</td>
+                                <td class="py-4 text-right pr-4">[RUN]</td>
+                            </tr>
+                            <tr class="hover:bg-terminal-green hover:text-black transition-colors border-b border-white/10 group cursor-pointer hover-trigger" onclick="window.open('projects/the-profiler/index.html')">
+                                <td class="py-4 pl-4 font-bold">-rwxr--r--</td>
+                                <td class="py-4 text-white/50 group-hover:text-black">4402</td>
+                                <td class="py-4 font-bold text-xl">THE_PROFILER</td>
+                                <td class="py-4 opacity-80">Outil de profilage</td>
+                                <td class="py-4 text-right pr-4">[RUN]</td>
+                            </tr>
+                            <tr class="hover:bg-terminal-green hover:text-black transition-colors border-b border-white/10 group cursor-pointer hover-trigger" onclick="window.open('projects/intj/index.html')">
+                                <td class="py-4 pl-4 font-bold">-rw-r--r--</td>
+                                <td class="py-4 text-white/50 group-hover:text-black">8821</td>
+                                <td class="py-4 font-bold text-xl">INTJ_ZONE</td>
+                                <td class="py-4 opacity-80">Documentation Personality Type</td>
+                                <td class="py-4 text-right pr-4">[VIEW]</td>
+                            </tr>
+                            <tr class="hover:bg-terminal-green hover:text-black transition-colors border-b border-white/10 group cursor-pointer hover-trigger" onclick="window.open('projects/puissance4/index.html')">
+                                <td class="py-4 pl-4 font-bold">-rwxr-xr-x</td>
+                                <td class="py-4 text-white/50 group-hover:text-black">3310</td>
+                                <td class="py-4 font-bold text-xl">PUISSANCE_4</td>
+                                <td class="py-4 opacity-80">Jeu classique Web</td>
+                                <td class="py-4 text-right pr-4">[PLAY]</td>
+                            </tr>
+                            <tr class="hover:bg-terminal-green hover:text-black transition-colors border-b border-white/10 group cursor-pointer hover-trigger" onclick="window.open('projects/up-down/index.html')">
+                                <td class="py-4 pl-4 font-bold">-rwxr-xr-x</td>
+                                <td class="py-4 text-white/50 group-hover:text-black">1101</td>
+                                <td class="py-4 font-bold text-xl">UP_DOWN</td>
+                                <td class="py-4 opacity-80">Expérience interactive</td>
+                                <td class="py-4 text-right pr-4">[VIEW]</td>
+                            </tr>
+                             <tr class="hover:bg-terminal-green hover:text-black transition-colors border-b border-white/10 group cursor-pointer hover-trigger" onclick="window.open('projects/personnality/index.html')">
+                                <td class="py-4 pl-4 font-bold">-rw-r--r--</td>
+                                <td class="py-4 text-white/50 group-hover:text-black">5520</td>
+                                <td class="py-4 font-bold text-xl">PERSO_TESTS</td>
+                                <td class="py-4 opacity-80">Suite de tests psychologiques</td>
+                                <td class="py-4 text-right pr-4">[VIEW]</td>
+                            </tr>
+                             <tr class="hover:bg-terminal-green hover:text-black transition-colors border-b border-white/10 group cursor-pointer hover-trigger" onclick="window.open('projects/DFWCode-Final/index.html')">
+                                <td class="py-4 pl-4 font-bold">drwxr-xr-x</td>
+                                <td class="py-4 text-white/50 group-hover:text-black">0001</td>
+                                <td class="py-4 font-bold text-xl">DFW_CODE</td>
+                                <td class="py-4 opacity-80">Générateur de QR code</td>
+                                <td class="py-4 text-right pr-4">[VISIT]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- TERMINAL INPUT -->
+                <div class="mt-4 border-t border-terminal-green pt-2 flex items-center gap-2">
+                    <span class="text-terminal-green animate-pulse">guest@dualsfw:~#</span>
+                    <input type="text" id="terminal-input" class="bg-transparent border-none outline-none text-terminal-green font-mono w-full uppercase placeholder-terminal-green/30" placeholder="Type 'help' for commands..." autocomplete="off" spellcheck="false">
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER / CONTACT -->
+        <footer id="contact" class="bg-acid-yellow pt-20 pb-10 px-4 md:px-12 relative">
+            <div class="max-w-7xl mx-auto">
+                <p class="font-bold text-xl mb-4 text-off-black">READY TO COLLABORATE?</p>
+                <div class="group inline-block">
+                    <a href="https://linkedin.com/in/noah-bruijninckx-930a80221" target="_blank" class="font-display text-[10vw] leading-[0.9] text-black group-hover:text-white transition-colors duration-300 block hover-trigger break-all">
+                        LINKEDIN<br>PROFILE
+                    </a>
+                </div>
+                <div class="mt-4">
+                    <a href="mailto:contact@dualsfwshield.be" class="font-mono text-sm text-off-black hover:text-black underline">contact@dualsfwshield.be</a>
+                </div>
+                
+                <div class="flex flex-col md:flex-row justify-between items-end mt-20 border-t-4 border-black pt-8 gap-8">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 w-full md:w-auto">
+                        <!-- INSTAGRAM -->
+                        <a href="https://instagram.com/dualsfwshield" target="_blank" class="bg-black text-white px-3 py-2 font-bold hover:bg-white hover:text-black border-2 border-black transition-colors flex items-center gap-2 text-sm justify-center">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg> INSTAGRAM
+                        </a>
+                        <!-- TIKTOK -->
+                        <a href="https://www.tiktok.com/@dualsfwshield" target="_blank" class="bg-black text-white px-3 py-2 font-bold hover:bg-white hover:text-black border-2 border-black transition-colors flex items-center gap-2 text-sm justify-center">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg> TIKTOK
+                        </a>
+                        <!-- TWITCH -->
+                        <a href="https://www.twitch.tv/diamslabs543" target="_blank" class="bg-black text-white px-3 py-2 font-bold hover:bg-white hover:text-black border-2 border-black transition-colors flex items-center gap-2 text-sm justify-center">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2H3v16h5v4l4-4h5l4-4V2zm-10 9V7m5 4V7"/></svg> TWITCH
+                        </a>
+                        <!-- X (TWITTER) -->
+                        <a href="https://x.com/Rapt_re" target="_blank" class="bg-black text-white px-3 py-2 font-bold hover:bg-white hover:text-black border-2 border-black transition-colors flex items-center gap-2 text-sm justify-center">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l11.733 16h4.267l-11.733 -16z"/><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"/></svg> / TWITTER
+                        </a>
+                        <!-- YOUTUBE (MAIN) -->
+                        <a href="https://www.youtube.com/@NoahBruijninckx" target="_blank" class="bg-black text-white px-3 py-2 font-bold hover:bg-white hover:text-black border-2 border-black transition-colors flex items-center gap-2 text-sm justify-center md:col-span-1">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/></svg> YOUTUBE
+                        </a>
+                    </div>
+                    <div class="text-right font-bold font-mono">
+                        <p>DUALSFWSHIELD // 2025</p>
+                        <p>SECURE CONNECTION ESTABLISHED.</p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+    </main>
+
+    <!-- SCRIPTS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.0.45/dist/lenis.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            
+            // --- 0. BOOT SEQUENCE ---
+            const bootOverlay = document.getElementById('boot-overlay');
+            const bootLog = document.getElementById('boot-log');
+            const bootBar = document.getElementById('boot-progress');
+            const logs = [
+                "INITIALIZING_KERNEL...",
+                "LOADING_MODULES: [GSAP, LENIS, TAILWIND]...",
+                "CHECKING_INTEGRITY... OK",
+                "ESTABLISHING_SECURE_CONNECTION...",
+                "MOUNTING_FILE_SYSTEM...",
+                "ACCESS_GRANTED."
+            ];
+
+            let logIndex = 0;
+            // Reveal Boot Overlay contents
+            gsap.to("#boot-overlay", {opacity: 1, duration: 0});
+
+            const logInterval = setInterval(() => {
+                if (logIndex < logs.length) {
+                    const p = document.createElement('p');
+                    p.className = 'boot-text font-mono text-xs text-terminal-green';
+                    p.innerText = `> ${logs[logIndex]}`;
+                    bootLog.appendChild(p);
+                    gsap.fromTo(p, {opacity:0, x: -10}, {opacity:1, x:0, duration:0.1});
+                    logIndex++;
+                    bootLog.scrollTop = bootLog.scrollHeight;
+                } else {
+                    clearInterval(logInterval);
+                }
+            }, 250);
+
+            // Progress Bar Animation
+            gsap.to(bootBar, {
+                width: "100%", 
+                duration: 2.2, 
+                ease: "power2.inOut",
+                onComplete: () => {
+                    setTimeout(hideBootOverlay, 400);
+                }
+            });
+
+            function hideBootOverlay() {
+                // Curtain Reveal
+                gsap.to(bootOverlay, {
+                    yPercent: -100,
+                    duration: 1.0,
+                    ease: "power4.inOut",
+                    onComplete: () => {
+                        document.body.classList.remove('overflow-hidden');
+                        bootOverlay.style.display = 'none';
+                        startSiteAnimations();
+                    }
+                });
+            }
+
+            // --- 1. CORE SCROLL (LENIS) & VELOCITY SKEW ---
+            const lenis = new Lenis({
+                duration: 1.2,
+                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                smooth: true,
+            });
+            
+            const mainContent = document.querySelector('main');
+            
+            lenis.on('scroll', (e) => {
+                // Velocity Skew Effect (Desktop Only)
+                if(window.innerWidth > 768 && mainContent) {
+                    gsap.to(mainContent, {
+                        skewY: e.velocity * 0.05,
+                        duration: 0.2,
+                        ease: "power1.out"
+                    });
+                }
+            });
+
+            function raf(time) {
+                lenis.raf(time);
+                requestAnimationFrame(raf);
+            }
+            requestAnimationFrame(raf);
+
+            gsap.registerPlugin(ScrollTrigger);
+
+            // --- 2. MAIN SITE ANIMATIONS (TRIGGERED AFTER BOOT) ---
+            function startSiteAnimations() {
+                
+                // Hero Reveal
+                gsap.from('.reveal-text', { 
+                    y: 50, 
+                    opacity: 0, 
+                    duration: 1, 
+                    stagger: 0.1, 
+                    ease: "power2.out",
+                });
+                
+                // --- HACKER TEXT EFFECT ---
+                initHackerText();
+                
+                // --- MAGNETIC BUTTONS ---
+                initMagneticButtons();
+            }
+
+            function initHackerText() {
+                const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;':,./<>?";
+                // Target generic headers and links
+                const targets = document.querySelectorAll('h2, .hover-trigger, .font-display');
+                
+                targets.forEach(el => {
+                   if(!el.textContent.trim() || el.querySelectorAll('*').length > 0) return; // Skip if has children or empty
+                   
+                   const originalText = el.innerText;
+                   
+                   el.addEventListener('mouseenter', () => {
+                       let iterations = 0;
+                       clearInterval(el.interval);
+                       
+                       el.interval = setInterval(() => {
+                           el.innerText = el.innerText.split('')
+                               .map((letter, index) => {
+                                   if(index < iterations) return originalText[index];
+                                   return chars[Math.floor(Math.random() * chars.length)];
+                               })
+                               .join('');
+                           
+                           if(iterations >= originalText.length) { 
+                               clearInterval(el.interval);
+                               el.innerText = originalText; // Ensure clean end
+                           }
+                           
+                           iterations += 1/2; 
+                       }, 30);
+                   });
+                });
+            }
+
+            function initMagneticButtons() {
+                if (window.matchMedia("(pointer: fine)").matches) {
+                    // Make sure these elements exist and are relatively positioned if needed
+                    const magnets = document.querySelectorAll('.magnetic-btn, .group'); 
+                    
+                    magnets.forEach(btn => {
+                        btn.addEventListener('mousemove', (e) => {
+                            const rect = btn.getBoundingClientRect();
+                            const x = e.clientX - rect.left - rect.width / 2;
+                            const y = e.clientY - rect.top - rect.height / 2;
+                            
+                            // Apply force
+                            gsap.to(btn, { 
+                                x: x * 0.15, 
+                                y: y * 0.15, 
+                                duration: 0.3, 
+                                ease: "power2.out" 
+                            });
+                        });
+
+                        btn.addEventListener('mouseleave', () => {
+                            gsap.to(btn, { 
+                                x: 0, 
+                                y: 0, 
+                                duration: 0.5, 
+                                ease: "elastic.out(1, 0.3)" 
+                            });
+                        });
+                    });
+                }
+            }
+
+            // --- 3. GLOBAL UTILS ---
+            
+            // Cursor Logic
+            if (window.matchMedia("(pointer: fine)").matches) {
+                const cursorDot = document.querySelector('.cursor-dot');
+                const cursorOutline = document.querySelector('.cursor-outline');
+                
+                window.addEventListener('mousemove', (e) => {
+                    gsap.set(cursorDot, { x: e.clientX, y: e.clientY });
+                    gsap.to(cursorOutline, { x: e.clientX, y: e.clientY, duration: 0.15 });
+                });
+
+                document.querySelectorAll('a, button, .hover-trigger, tr, article').forEach(trigger => {
+                    trigger.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+                    trigger.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+                });
+            }
+
+            // Marquee
+            gsap.to(".marquee-content", { xPercent: -50, repeat: -1, duration: 20, ease: "linear" });
+
+            // Terminal Scroll Trigger
+            const terminalRows = document.querySelectorAll("tbody tr");
+            if (terminalRows.length > 0) {
+                gsap.from(terminalRows, {
+                    x: -20,
+                    opacity: 0,
+                    duration: 0.5,
+                    stagger: 0.05,
+                    scrollTrigger: {
+                        trigger: "#terminal",
+                        start: "top 90%"
+                    }
+                });
+            }
+
+            // --- 4. EASTER EGGS & INTERACTIVITY ---
+            
+            // A. KONAMI CODE
+            // Normalized key codes for better compatibility
+            const konamiCode = ['arrowup', 'arrowup', 'arrowdown', 'arrowdown', 'arrowleft', 'arrowright', 'arrowleft', 'arrowright', 'b', 'a'];
+            let konamiIndex = 0;
+
+            document.addEventListener('keydown', (e) => {
+                const key = e.key.toLowerCase();
+                
+                if (key === konamiCode[konamiIndex]) {
+                    konamiIndex++;
+                    if (konamiIndex === konamiCode.length) {
+                        activateGodMode();
+                        konamiIndex = 0;
+                    }
+                } else {
+                    // Reset if miss, but allow restarting immediately if the key matches the first key
+                    konamiIndex = (key === konamiCode[0]) ? 1 : 0;
+                }
+            });
+
+            function activateGodMode() {
+                document.body.classList.toggle('god-mode');
+                const isGod = document.body.classList.contains('god-mode');
+                
+                if (isGod) {
+                    console.log("GOD MODE ACTIVATED");
+                    // Visual changes handled by CSS, but let's add some chaos
+                    gsap.to("body", { filter: "invert(1) hue-rotate(180deg)", duration: 0.5 });
+                    alert("⚠️ GOD MODE ACTIVATED ⚠️\nAdmin access granted.");
+                } else {
+                    gsap.to("body", { filter: "none", duration: 0.5 });
+                }
+            }
+
+            // MOBILE: Long-press on logo (3s) to activate God Mode
+            const navLogo = document.getElementById('nav-logo');
+            let longPressTimer = null;
+            
+            if (navLogo) {
+                navLogo.addEventListener('touchstart', (e) => {
+                    longPressTimer = setTimeout(() => {
+                        window.hintMgr?.markUsed('god_mode_mobile'); // Mark hint used
+                        activateGodMode();
+                        // Vibrate if supported
+                        if (navigator.vibrate) navigator.vibrate(200);
+                    }, 3000); // 3 second hold
+                }, { passive: true });
+                
+                navLogo.addEventListener('touchend', () => {
+                    if (longPressTimer) clearTimeout(longPressTimer);
+                });
+                navLogo.addEventListener('touchcancel', () => {
+                    if (longPressTimer) clearTimeout(longPressTimer);
+                });
+                navLogo.addEventListener('touchmove', () => {
+                    if (longPressTimer) clearTimeout(longPressTimer);
+                });
+            }
+
+            // B. INTERACTIVE TERMINAL
+            const termInput = document.getElementById('terminal-input');
+            const termTable = document.querySelector('tbody');
+            
+            termInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const cmd = termInput.value.trim().toLowerCase();
+                    termInput.value = '';
+                    handleCommand(cmd);
+                }
+            });
+
+            function handleCommand(cmd) {
+                // Flash input line
+                gsap.fromTo(termInput, { color: '#fff' }, { color: '#20C20E', duration: 0.2 });
+
+                switch(cmd) {
+                    case 'help':
+                        alert("AVAILABLE COMMANDS:\n> ls - List projects\n> clear - Clear terminal (fake)\n> whoami - Current user info\n> sudo - Try admin access\n> matrix - Enter the matrix");
+                        break;
+                    case 'ls':
+                        // Flash the table rows
+                        gsap.fromTo("tbody tr", { opacity: 0, x: -20 }, { opacity: 1, x: 0, stagger: 0.05, duration: 0.3 });
+                        break;
+                    case 'clear':
+                        // Just hide rows temporarily
+                        gsap.to("tbody tr", { opacity: 0, duration: 0.2 });
+                        setTimeout(() => gsap.to("tbody tr", { opacity: 1, duration: 1 }), 1000);
+                        break;
+                    case 'whoami':
+                        alert("USER: GUEST\nROLE: OBSERVER\nIP: ::1");
+                        break;
+                    case 'sudo':
+                        alert("ACCESS DENIED: You didn't say the magic word.");
+                        break;
+                    case 'matrix':
+                        // window.open('https://dualsfwshield.github.io/Bot-Arena/'); 
+                        if(window.startMatrixRain) window.startMatrixRain();
+                        break;
+                    case 'konami':
+                         alert("Don't type it, DO it.");
+                         break;
+                    default:
+                        // No-op or error
+                        termInput.placeholder = `COMMAND NOT FOUND: ${cmd}`;
+                        setTimeout(() => termInput.placeholder = "Type 'help' for commands...", 2000);
+                }
+            }
+
+            // A. TRUE CMY TITLE SPLIT
+            const titleContainer = document.getElementById('hero-title-container');
+            if (titleContainer) {
+                document.addEventListener('mousemove', (e) => {
+                    const rect = titleContainer.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    
+                    // Normalize -1 to 1
+                    const percentX = (e.clientX - centerX) / (window.innerWidth / 2);
+                    const percentY = (e.clientY - centerY) / (window.innerHeight / 2);
+
+                    // Update custom props for offsets
+                    titleContainer.style.setProperty('--rx', percentX * 15);
+                    titleContainer.style.setProperty('--ry', percentY * 15);
+                });
+            }
+
+            // B. GRAVITY BOX PHYSICS + WORMHOLE
+            const box = document.getElementById('gravity-box');
+            
+            // Initial position (center-ish)
+            let boxState = { 
+                x: window.innerWidth * 0.7, 
+                y: window.innerHeight * 0.3, 
+                vx: 0, 
+                vy: 0, 
+                isDragging: false 
+            };
+            
+            // Tuned Physics Constants (Restored)
+            const gravity = 0.5;
+            const friction = 0.99; // Super slick
+            const bounce = -0.95;  // Super bouncy
+
+
+
+
+            // Mouse Events
+            box.addEventListener('mousedown', (e) => {
+                boxState.isDragging = true;
+                boxState.vx = 0;
+                boxState.vy = 0;
+            });
+            window.addEventListener('mouseup', () => { boxState.isDragging = false; });
+            
+            window.addEventListener('mousemove', (e) => {
+                if (boxState.isDragging) {
+                    boxState.vx = (e.clientX - boxState.x) * 0.4;
+                    boxState.vy = (e.clientY - boxState.y) * 0.4;
+                    boxState.x = e.clientX - 40;
+                    boxState.y = e.clientY - 40;
+                }
+            });
+
+            // MOBILE: Touch Events for Data Disk
+            box.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                boxState.isDragging = true;
+                boxState.vx = 0;
+                boxState.vy = 0;
+            }, { passive: false });
+            
+            window.addEventListener('touchend', () => { boxState.isDragging = false; });
+            window.addEventListener('touchcancel', () => { boxState.isDragging = false; });
+            
+            window.addEventListener('touchmove', (e) => {
+                if (boxState.isDragging && e.touches.length > 0) {
+                    const touch = e.touches[0];
+                    boxState.vx = (touch.clientX - boxState.x) * 0.4;
+                    boxState.vy = (touch.clientY - boxState.y) * 0.4;
+                    boxState.x = touch.clientX - 40;
+                    boxState.y = touch.clientY - 40;
+                }
+            }, { passive: true });
+
+            function updatePhysics() {
+                if (!boxState.isDragging && box.style.display !== 'none') {
+                    boxState.vy += gravity;
+                    boxState.vx *= friction;
+                    boxState.vy *= friction;
+
+                    boxState.x += boxState.vx;
+                    boxState.y += boxState.vy;
+
+                    // SCREEN SPACE LOGIC
+                    // We need to account for browser UI (tabs/address bar) to get accurate Screen Y
+                    const headerHeight = window.outerHeight - window.innerHeight;
+                    const screenX = window.screenX + boxState.x + 40; 
+                    const screenY = window.screenY + headerHeight + boxState.y + 40;
+                    
+                    // Check if we left our window rect (slightly padded)
+                    if (boxState.x < -40 || boxState.x > window.innerWidth || boxState.y < -40 || boxState.y > window.innerHeight) {
+                        
+                        // Check if we are inside another window
+                        winManager.refreshOthers();
+                        let transferred = false;
+                        
+                        for (const other of winManager.others) {
+                            if (screenX >= other.shape.x && screenX <= other.shape.x + other.shape.w &&
+                                screenY >= other.shape.y && screenY <= other.shape.y + other.shape.h) {
+                                
+                                // TRANSFER OWNERSHIP!
+                                const targetLocalX = screenX - other.shape.x - 40;
+                                const targetLocalY = screenY - other.shape.y - 40;
+                                
+                                const transferPacket = {
+                                    id: Date.now(),
+                                    targetWinId: other.id,
+                                    x: targetLocalX,
+                                    y: targetLocalY,
+                                    vx: boxState.vx,
+                                    vy: boxState.vy
+                                };
+                                
+                                console.log("Transferred to override:", other.id);
+                                localStorage.setItem('prop_transfer', JSON.stringify(transferPacket));
+                                
+                                // Hide local
+                                box.style.display = 'none';
+                                transferred = true;
+                                break;
+                            }
+                        }
+                        
+                        // If no transfer target found, bounce off walls (old behavior) or return to bounds
+                        if(!transferred) {
+                            const floor = window.innerHeight - 82;
+                            if (boxState.y > floor) { boxState.y = floor; boxState.vy *= bounce; triggerHaptic(); } 
+                            else if (boxState.y < 0) { boxState.y = 0; boxState.vy *= bounce; triggerHaptic(); }
+                            
+                            if (boxState.x > window.innerWidth - 82) { boxState.x = window.innerWidth - 82; boxState.vx *= bounce; triggerHaptic(); }
+                            else if (boxState.x < 0) { boxState.x = 0; boxState.vx *= bounce; triggerHaptic(); }
+                        }
+
+                    } else {
+                        // Regular bounds check (floor only usually)
+                        const floor = window.innerHeight - 82;
+                        if (boxState.y > floor) { boxState.y = floor; boxState.vy *= bounce; triggerHaptic(); }
+                    }
+                }
+                box.style.transform = `translate(${boxState.x}px, ${boxState.y}px)`;
+                requestAnimationFrame(updatePhysics);
+            }
+            updatePhysics();
+
+            // Listen for Prop Transfers
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'prop_transfer') {
+                    const packet = JSON.parse(e.newValue);
+                    if (packet && packet.targetWinId === winManager.id) {
+                        // ACCEPT TRANSFER
+                        // Wait a ms to ensure we don't double bounce?
+                        const now = Date.now();
+                        if (now - packet.id < 500) { // Fresh packet
+                            box.style.display = 'flex';
+                            boxState.x = packet.x;
+                            boxState.y = packet.y;
+                            boxState.vx = packet.vx;
+                            boxState.vy = packet.vy;
+                            boxState.isDragging = false;
+                        }
+                    }
+                }
+            });
+
+
+
+            // C. INTER-WINDOW SYNC (GOD MODE)
+            // Listen for changes in other tabs
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'god_mode_sync') {
+                   if (e.newValue === 'true') {
+                       if (!document.body.classList.contains('god-mode')) activateGodMode(true);
+                   } else {
+                       if (document.body.classList.contains('god-mode')) activateGodMode(true);
+                   }
+                }
+            });
+
+            // Patch existing activateGodMode to broadcast
+            const originalActivate = activateGodMode;
+            activateGodMode = function(skipSync = false) { // Override function
+                 document.body.classList.toggle('god-mode');
+                const isGod = document.body.classList.contains('god-mode');
+                
+                if (!skipSync) {
+                    localStorage.setItem('god_mode_sync', isGod); // Broadcast
+                }
+
+                if (isGod) {
+                    console.log("GOD MODE ACTIVATED");
+                    gsap.to("body", { filter: "invert(1) hue-rotate(180deg)", duration: 0.5 });
+                    if(!skipSync) alert("⚠️ GOD MODE ACTIVATED ⚠️\nAdmin access granted.");
+                } else {
+                    gsap.to("body", { filter: "none", duration: 0.5 });
+                }
+            };
+
+            // --- 6. DIMENSIONAL RIFTS (THREE.JS + WINDOW MANAGER) ---
+            
+            // WindowManager Class
+            class WindowManager {
+                constructor() {
+                    this.id = Date.now();
+                    this.winData = { id: this.id, shape: { x: 0, y: 0, w: 0, h: 0 } };
+                    this.others = [];
+                    this.init();
+                }
+
+                init() {
+                    window.addEventListener('storage', (e) => {
+                        if (e.key === 'windows_update') {
+                            this.refreshOthers();
+                        }
+                    });
+                    
+                    window.addEventListener('beforeunload', () => {
+                        this.removeSelf();
+                    });
+
+                    setInterval(() => this.updateSelf(), 100);
+                }
+
+                updateSelf() {
+                    this.winData.shape = {
+                        x: window.screenX,
+                        y: window.screenY,
+                        w: window.innerWidth,
+                        h: window.innerHeight
+                    };
+                    
+                    const all = this.getAllWindows();
+                    all[this.id] = { ...this.winData, updated: Date.now() };
+                    
+                    // Cleanup stale
+                    const now = Date.now();
+                    for(const id in all) {
+                        if (now - all[id].updated > 1000) delete all[id];
+                    }
+
+                    localStorage.setItem('windows', JSON.stringify(all));
+                    localStorage.setItem('windows_update', now); // trigger listeners
+                }
+                
+                removeSelf() {
+                    const all = this.getAllWindows();
+                    delete all[this.id];
+                    localStorage.setItem('windows', JSON.stringify(all));
+                    localStorage.setItem('windows_update', Date.now());
+                }
+
+                getAllWindows() {
+                    try {
+                        return JSON.parse(localStorage.getItem('windows')) || {};
+                    } catch(e) { return {}; }
+                }
+                
+                refreshOthers() {
+                    const all = this.getAllWindows();
+                    this.others = Object.values(all).filter(w => w.id !== this.id);
+                }
+            }
+
+            const winManager = new WindowManager();
+
+            // Vortex visuals removed by user request
+
+            // --- 7. MOBILE SENSORS (GYRO + HAPTICS) ---
+            
+            // DATA DISK STATE EXTENSION
+            if (typeof boxState !== 'undefined') {
+                boxState.sensorsEnabled = false; // Default OFF
+                boxState.hasMoved = false;
+                boxState.switchInteracted = false;
+            }
+
+            // TOGGLE LOGIC
+            const diskToggle = document.getElementById('disk-toggle');
+            if (diskToggle) {
+                diskToggle.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Don't drag
+                    boxState.sensorsEnabled = !boxState.sensorsEnabled;
+                    boxState.switchInteracted = true; // Mark as interacted
+                    diskToggle.classList.toggle('active', boxState.sensorsEnabled);
+                    
+                    // Hide hint immediately if clicked
+                    if (diskHint) gsap.to(diskHint, { opacity: 0, duration: 0.2 });
+
+                    if (boxState.sensorsEnabled && navigator.vibrate) navigator.vibrate(50);
+                });
+                
+                diskToggle.addEventListener('touchstart', (e) => { e.stopPropagation(); }, {passive: true});
+            }
+
+            // INACTIVITY HINT
+            const diskHint = document.getElementById('disk-hint');
+            if (diskHint) {
+                // Set message text based on device
+                const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+                if (isTouch) diskHint.innerText = "TAP TO ACTIVATE SENSORS"; // Arrow points down to box/switch
+                
+                // Timer: 30s
+                setTimeout(() => {
+                    // Condition: Switch NEVER clicked (for mobile) OR Box NEVER moved (fallback for PC if no switch use)
+                    // User request: "untouched = pas de click sur le switch"
+                    const showHint = isTouch ? !boxState.switchInteracted : !boxState.hasMoved;
+
+                    if (showHint) {
+                        gsap.to(diskHint, { opacity: 1, duration: 0.5, onComplete: () => {
+                            gsap.to(diskHint, { opacity: 0, delay: 10, duration: 0.5 }); // 10 seconds visibility
+                        }});
+                    }
+                }, 30000); // 30s
+            }
+
+            function initMobileSensors() {
+                // Check for sensor support
+                if (window.DeviceOrientationEvent) { // Removed 'ontouchstart' check to allow testing on capable laptops, but mostly for mobile
+                    
+                    window.addEventListener('deviceorientation', (e) => {
+                        // Null check
+                        if (e.beta === null || e.gamma === null) return;
+
+                        const beta = e.beta;   // -180 to 180 (front/back tilt)
+                        const gamma = e.gamma; // -90 to 90 (left/right tilt)
+                        
+                        // GLOBAL PARALLAX VARS (Always On)
+                        // Map -90..90 to -1..1 range approx
+                        const pX = Math.max(-1, Math.min(1, gamma / 45)); 
+                        const pY = Math.max(-1, Math.min(1, (beta - 45) / 45));
+                        
+                        document.body.style.setProperty('--p-x', pX);
+                        document.body.style.setProperty('--p-y', pY);
+
+                        // A. DATA DISK GRAVITY (Controlled by Toggle)
+                        if (typeof boxState !== 'undefined' && 
+                            !boxState.isDragging && 
+                            document.getElementById('gravity-box').style.display !== 'none' &&
+                            boxState.sensorsEnabled) {
+                             
+                             const yForce = (beta - 45) * 0.05; 
+                             const xForce = gamma * 0.05;
+                             
+                             boxState.vx += xForce;
+                             boxState.vy += yForce;
+                             
+                             // Mark as moved if moving significantly
+                             if (Math.abs(xForce) > 0.05 || Math.abs(yForce) > 0.05) boxState.hasMoved = true;
+                        }
+
+                        // B. HERO TITLE PARALLAX (CMY)
+                        // Let's use the same logic as before but linked to the new global or direct map
+                        const titleContainer = document.getElementById('hero-title-container');
+                        if (titleContainer) {
+                            // CORRECTED MAPPING:
+                            // Gamma (Left/Right Tilt) -> Controls X axis (--rx)
+                            // Beta (Front/Back Tilt)  -> Controls Y axis (--ry)
+                            
+                            const rX = Math.max(-15, Math.min(15, gamma / 2));          // Gamma -> RX
+                            const rY = Math.max(-15, Math.min(15, (beta - 45) / 2));    // Beta -> RY
+                            
+                            titleContainer.style.setProperty('--rx', rX);
+                            titleContainer.style.setProperty('--ry', rY);
+                        }
+
+                        // C. TERMINAL ARCHIVE LIST (Row Depth)
+                        const terminalRows = document.querySelectorAll('#terminal tbody tr');
+                        if (terminalRows.length > 0) {
+                            const xTilt = Math.max(-30, Math.min(30, gamma)); 
+                            terminalRows.forEach((row, index) => {
+                                const depth = 1 + (index * 0.2); 
+                                const xPos = xTilt * depth * 0.5;
+                                row.style.transform = `translateX(${xPos}px)`;
+                            });
+                        }
+                        
+                        // D. EXPANDED PARALLAX (Articles, Videos, Logos, Footer)
+                        // We use the CSS vars --p-x and --p-y set above.
+                        // We can apply transforms directly here for better performance than CSS calc() in loop?
+                        // Let's do direct transforms for smoothness.
+                        
+                        // 1. Articles
+                        document.querySelectorAll('article').forEach((el, i) => {
+                            const depth = 10 + (i % 3) * 5; 
+                            el.style.transform = `translate(${pX * depth}px, ${pY * depth}px)`;
+                        });
+                        
+                        // 2. Video Containers
+                        document.querySelectorAll('.video-container').forEach((el, i) => {
+                             const depth = 10;
+                             el.style.transform = `translate(${pX * depth}px, ${pY * depth}px) scale(1.02)`; // Scale to avoid edge clipping
+                        });
+                        
+                        // 3. Logos
+                        document.querySelectorAll('.logo-card').forEach((el, i) => {
+                             const depth = 8 + (i % 4) * 2;
+                             el.style.transform = `translate(${pX * depth}px, ${pY * depth}px)`;
+                        });
+                        
+                        // 4. LinkedIn Footer Title
+                        // We need to target it specifically. It's the big link in footer.
+                        const footerLink = document.querySelector('footer a[href*="linkedin"]');
+                        if (footerLink) {
+                             footerLink.style.transform = `translate(${pX * 20}px, ${pY * 20}px)`;
+                             footerLink.style.display = 'inline-block'; // Ensure transform applies
+                        }
+
+                    });
+                }
+            }
+            // Start sensors
+            initMobileSensors();
+
+            // Utilities
+            function triggerHaptic() {
+                 if (boxState.sensorsEnabled && navigator.vibrate) navigator.vibrate(15);
+            }
+
+            // --- 8. SYSTEM HINTS MANAGER (EASTER EGGS) ---
+            class HintManager {
+                constructor() {
+                    this.container = document.getElementById('system-hints');
+                    this.hints = [];
+                    this.startTime = Date.now();
+                    this.usedFeatures = new Set();
+                    
+                    // Start loop
+                    setInterval(() => this.check(), 1000);
+                }
+
+                register(id, delay, msg, sarcasticMsg, delaySarcasm = 120) {
+                    this.hints.push({
+                        id,
+                        delay,
+                        msg,
+                        sarcasticMsg,
+                        delaySarcasm: delay + delaySarcasm, // Sarcasm comes 2 mins AFTER hint
+                        shownStandard: false,
+                        shownSarcastic: false
+                    });
+                }
+
+                markUsed(id) {
+                    if(!this.usedFeatures.has(id)){
+                        this.usedFeatures.add(id);
+                        // Optional: Show success/congrats log?
+                    }
+                }
+
+                check() {
+                    const elapsed = (Date.now() - this.startTime) / 1000;
+                    
+                    this.hints.forEach(hint => {
+                        if (this.usedFeatures.has(hint.id)) return; // Already found
+
+                        // Standard Hint
+                        if (elapsed >= hint.delay && !hint.shownStandard) {
+                            this.show(hint.msg);
+                            hint.shownStandard = true;
+                        }
+
+                        // Sarcastic Hint
+                        if (elapsed >= hint.delaySarcasm && !hint.shownSarcastic) {
+                            this.show(hint.sarcasticMsg, true);
+                            hint.shownSarcastic = true;
+                        }
+                    });
+                }
+
+                show(text, isSarcastic = false) {
+                    if (!this.container) return;
+
+                    const el = document.createElement('div');
+                    el.className = `system-hint-msg ${isSarcastic ? 'sarcastic' : ''}`;
+                    el.innerText = `> ${text}`;
+                    
+                    this.container.appendChild(el);
+                    
+                    // Animate In
+                    requestAnimationFrame(() => el.classList.add('visible'));
+
+                    // Remove after 8 seconds
+                    setTimeout(() => {
+                        el.classList.remove('visible');
+                        setTimeout(() => el.remove(), 500); // Wait for transition
+                    }, 8000);
+                }
+            }
+
+            // Init & Register Hints
+            const hints = new HintManager();
+            const isMobile = ('ontouchstart' in window);
+
+            // 1. Hacker Text (45s)
+            // Mobile Adjustment: Click instead of Hover
+            const msgHacker = isMobile 
+                ? "INFO: Encrypted signatures detected. Tap to decrypt."
+                : "INFO: Encrypted signatures detected. Cursor interaction required.";
+            const msgHackerSarcastic = isMobile
+                ? "WARNING: Curiosity levels critical. Tap the glitchy text."
+                : "WARNING: Curiosity levels critical. Hover over the glitchy text.";
+
+            hints.register('hacker_text', 45, msgHacker, msgHackerSarcastic);
+            
+            // Hook into hacker text to mark used (Hover or Click)
+            document.querySelectorAll('.font-display, .hover-trigger').forEach(el => {
+                el.addEventListener('mouseenter', () => hints.markUsed('hacker_text'), {once:true});
+                // Also mobile tap
+                el.addEventListener('click', () => hints.markUsed('hacker_text'), {once:true});
+            });
+
+            // 2. Terminal (60s)
+            hints.register('terminal', 60, 
+                "INFO: Terminal uplink active. 'help' command available.",
+                "ERROR: Keyboard missing? Type 'help' in the terminal."
+            );
+            // Hook into terminal input
+            const tIn = document.getElementById('terminal-input');
+            if(tIn) tIn.addEventListener('keydown', () => hints.markUsed('terminal'), {once:true});
+
+            // 3. Konami (Desktop) / God Mode (Mobile) (90s)
+            if (!isMobile) {
+                hints.register('konami', 90, 
+                    "TIP: Vintage cheat codes supported. Up, Up, Down, Down...",
+                    "STATUS: Disappointed. ↑↑↓↓←→←→BA. Do it."
+                );
+                // Hook into activateGodMode
+                const _oldGod = activateGodMode;
+                activateGodMode = function(skip) {
+                    hints.markUsed('konami');
+                    _oldGod(skip);
+                };
+            } else {
+                 hints.register('god_mode_mobile', 90, 
+                    "TIP: The Identity Grid logo holds root access.",
+                    "STATUS: Patience is a virtue. Hold the top-left logo for 3s."
+                );
+                 // Attached to logo touch event logic below
+            }
+
+            // 4. ASCII Art (120s) - DESKTOP ONLY
+            if(!isMobile) {
+                hints.register('ascii', 120, 
+                    "INFO: The source code contains hidden art.",
+                    "STATUS: Right-click -> View Source. It's not rocket science."
+                );
+            }
+            // Validation: Detect contextmenu or F12 (Always listen just in case)
+            window.addEventListener('contextmenu', () => hints.markUsed('ascii'));
+            window.addEventListener('keydown', (e) => {
+                if(e.key === 'F12' || (e.ctrlKey && e.key === 'u')) hints.markUsed('ascii');
+            });
+
+            // Expose for mobile logo hook
+            window.hintMgr = hints;
+
+
+            // --- 9. MATRIX RAIN EFFECT ---
+            let matrixInterval = null;
+            
+            function startMatrixRain() {
+                const cvs = document.getElementById('matrix-canvas');
+                if(!cvs) return;
+                
+                const ctx = cvs.getContext('2d');
+                cvs.width = window.innerWidth;
+                cvs.height = window.innerHeight;
+                
+                cvs.style.opacity = '1';
+                
+                // Characters - Katakana + Latin
+                const chars = "アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                const charArray = chars.split('');
+                
+                const fontSize = 16;
+                const columns = cvs.width / fontSize;
+                
+                const drops = [];
+                for(let x = 0; x < columns; x++) drops[x] = 1;
+                
+                if(matrixInterval) clearInterval(matrixInterval);
+                
+                const draw = () => {
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                    ctx.fillRect(0, 0, cvs.width, cvs.height);
+                    
+                    ctx.fillStyle = '#20C20E'; // Terminal Green
+                    ctx.font = fontSize + 'px monospace';
+                    
+                    for(let i = 0; i < drops.length; i++) {
+                        const text = charArray[Math.floor(Math.random() * charArray.length)];
+                        ctx.fillText(text, i*fontSize, drops[i]*fontSize);
+                        
+                        if(drops[i]*fontSize > cvs.height && Math.random() > 0.975) {
+                            drops[i] = 0;
+                        }
+                        drops[i]++;
+                    }
+                };
+                
+                matrixInterval = setInterval(draw, 33);
+                
+                // Play sound if possible?
+                // Add click listener to stop it?
+                cvs.style.pointerEvents = 'auto'; // allow clicking to stop
+                const stopRain = () => {
+                    cvs.style.opacity = '0';
+                    cvs.style.pointerEvents = 'none';
+                    setTimeout(() => clearInterval(matrixInterval), 1000);
+                    cvs.removeEventListener('click', stopRain);
+                };
+                cvs.addEventListener('click', stopRain);
+                
+                alert("MATRIX UPLINK ESTABLISHED.\nClick anywhere to disconnect.");
+            }
+            
+            // Expose for command
+            window.startMatrixRain = startMatrixRain;
+
+        });
+    </script>
+</body>
+</html>
